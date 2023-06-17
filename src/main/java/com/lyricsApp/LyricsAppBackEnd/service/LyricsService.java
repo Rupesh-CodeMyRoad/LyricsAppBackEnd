@@ -4,7 +4,6 @@ import com.lyricsApp.LyricsAppBackEnd.dto.LyricsDTO;
 import com.lyricsApp.LyricsAppBackEnd.model.Lyrics;
 import com.lyricsApp.LyricsAppBackEnd.repo.LyricsRepo;
 import com.lyricsApp.LyricsAppBackEnd.utils.CountryName;
-import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -201,6 +200,19 @@ public class LyricsService {
             mapData.put("flag", flag);
             data.add(mapData);
         }
+        return data;
+    }
+
+    public Map<String, String> getDetailsByCountryName(CountryName countryName) {
+        Map<String, String> data = new HashMap<>();
+        Lyrics countryData = lyricsRepository.findByCountryName(countryName)
+                .orElseThrow(() -> new RuntimeException(
+                        "Error: Lyrics for the country: " + countryName + " is not found."
+                ));
+
+        String mp3 = "http://" + envHost + ":" + envPort + "/api/lyrics/mp3/" + countryName;
+        data.put("lyrics", countryData.getAnthemLyrics());
+        data.put("mp3", mp3);
         return data;
     }
 }

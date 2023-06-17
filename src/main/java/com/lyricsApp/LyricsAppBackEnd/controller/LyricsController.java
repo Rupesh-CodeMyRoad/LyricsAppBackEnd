@@ -102,4 +102,9 @@ public class LyricsController {
     public Map<String,Object> getDashBoardInfo() {
         return lyricsService.getDashboardInfo();
     }
+
+    @GetMapping("/fetch/{countryName}")
+    public Map<String,String> getDetailsByCountryName(@PathVariable("countryName") CountryName countryName) {
+        return lyricsService.getDetailsByCountryName(countryName);
+    }
 }
