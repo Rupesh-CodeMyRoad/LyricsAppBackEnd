@@ -11,4 +11,5 @@ public class LyricsDTO{
     private CountryName countryName;
     private String anthemLyrics;
     private MultipartFile anthemAudio;
+    private MultipartFile flag;
 }

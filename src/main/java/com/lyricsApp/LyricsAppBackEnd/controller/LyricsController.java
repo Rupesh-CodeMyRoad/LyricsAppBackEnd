@@ -33,6 +33,11 @@ public class LyricsController {
         return lyricsService.getAllLyrics();
     }
 
+    @GetMapping("/mobileHomeScreen")
+    public List<Map<String,String>> getMobileHomeScreenData() {
+        return lyricsService.getAllCountryList();
+    }
+
     @GetMapping("/{countryName}")
     public Lyrics getLyricsByCountryName(@PathVariable CountryName countryName) {
         return lyricsService.getLyricsByCountryName(countryName);
@@ -53,6 +58,28 @@ public class LyricsController {
     public ResponseEntity<Resource> getMP3ByCountryName(@PathVariable("country") CountryName countryName) {
         Lyrics lyrics = lyricsService.getLyricsByCountryName(countryName);
         Path path = Paths.get(lyrics.getAnthemAudioLink());
+
+        Resource resource;
+        try {
+            resource = (Resource) new UrlResource(path.toUri());
+        } catch (Exception e) {
+            // handle the error here.
+            return ResponseEntity.notFound().build();
+        }
+
+        if (resource.exists() || resource.isReadable()) {
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + resource.getFilename())
+                    .body(resource);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/flag/{countryName}")
+    public ResponseEntity<Resource> getFlagByCountryName(@PathVariable("countryName") CountryName countryName) {
+        Lyrics lyrics = lyricsService.getLyricsByCountryName(countryName);
+        Path path = Paths.get(lyrics.getFlagLink());
 
         Resource resource;
         try {

@@ -21,4 +21,5 @@ public class Lyrics {
     private CountryName countryName;
     private String anthemLyrics;
     private String anthemAudioLink;
+    private String flagLink;
 }

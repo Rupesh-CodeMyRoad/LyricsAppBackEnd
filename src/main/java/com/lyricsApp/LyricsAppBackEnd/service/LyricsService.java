@@ -5,6 +5,7 @@ import com.lyricsApp.LyricsAppBackEnd.model.Lyrics;
 import com.lyricsApp.LyricsAppBackEnd.repo.LyricsRepo;
 import com.lyricsApp.LyricsAppBackEnd.utils.CountryName;
 import lombok.AllArgsConstructor;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -15,20 +16,21 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 @AllArgsConstructor
 @Transactional
 public class LyricsService {
     private final LyricsRepo lyricsRepository;
+
+    Environment environment;
 
 
     public ResponseEntity<Lyrics> saveLyrics(LyricsDTO lyricsDto) {
@@ -38,36 +40,67 @@ public class LyricsService {
             throw new RuntimeException("Sorry Country Lyrics is already present. Please Update the existing one");
         }
 
-        MultipartFile file = lyricsDto.getAnthemAudio();
-        String fileName = StringUtils.cleanPath(file.getOriginalFilename()); // spring utility method to clean the path
+        //upload audio file
+
+        MultipartFile audioFile = lyricsDto.getAnthemAudio();
+        String audioFileName = StringUtils.cleanPath(audioFile.getOriginalFilename()); // spring utility method to clean the path
 
         // Use File.separator to ensure the correct file separator is used
-        String directory = "uploads" + File.separator;
-        Path dirPath = Paths.get(directory);
+        String audioDirectory = "audioUploads" + File.separator;
+        Path audioDirPath = Paths.get(audioDirectory);
 
         // Check if the directory exists, if not, create it
-        if (!Files.exists(dirPath)) {
+        if (!Files.exists(audioDirPath)) {
             try {
-                Files.createDirectories(dirPath);
+                Files.createDirectories(audioDirPath);
             } catch (IOException e) {
                 // Handle the situation when the directory cannot be created.
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
             }
         }
 
-        Path path = dirPath.resolve(fileName); // this will get the path of file in uploads directory
+        Path audioPath = audioDirPath.resolve(audioFileName); // this will get the path of file in uploads directory
 
-        try (InputStream inputStream = file.getInputStream()) {
-            Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
+        try (InputStream inputStream = audioFile.getInputStream()) {
+            Files.copy(inputStream, audioPath, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             // Add proper error handling here.
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 
+        //upload flag
+        MultipartFile flagFile = lyricsDto.getFlag();
+        String flagFileName = StringUtils.cleanPath(flagFile.getOriginalFilename()); // spring utility method to clean the path
+
+        // Use File.separator to ensure the correct file separator is used
+        String flagDirectory = "flagUploads" + File.separator;
+        Path flagDirPath = Paths.get(flagDirectory);
+
+        // Check if the directory exists, if not, create it
+        if (!Files.exists(flagDirPath)) {
+            try {
+                Files.createDirectories(flagDirPath);
+            } catch (IOException e) {
+                // Handle the situation when the directory cannot be created.
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            }
+        }
+
+        Path flagPath = flagDirPath.resolve(flagFileName); // this will get the path of file in uploads directory
+
+        try (InputStream inputStream = flagFile.getInputStream()) {
+            Files.copy(inputStream, flagPath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            // Add proper error handling here.
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+
         Lyrics lyrics = new Lyrics();
         lyrics.setCountryName(lyricsDto.getCountryName());
         lyrics.setAnthemLyrics(lyricsDto.getAnthemLyrics());
-        lyrics.setAnthemAudioLink(path.toString());
+        lyrics.setAnthemAudioLink(audioPath.toString());
+        lyrics.setFlagLink(flagPath.toString());
 
         Lyrics savedLyrics = lyricsRepository.save(lyrics);
 
@@ -147,6 +180,21 @@ public class LyricsService {
         int count = lyricsRepository.countLyrics();
         Map<String,Object> data = new HashMap<>();
         data.put("count",count);
+        return data;
+    }
+
+    public List<Map<String,String>> getAllCountryList(){
+        String port = environment.getProperty("local.server.port");
+        String hostName = InetAddress.getLoopbackAddress().getHostName();
+        List<Map<String,String>> data = new ArrayList<>();
+        List<Lyrics> lyricsData = lyricsRepository.findAll();
+        for (Lyrics lyric: lyricsData) {
+            String flag = "http://"+hostName+":"+port+"/api/lyrics/flag/"+lyric.getCountryName();
+            Map<String,String> mapData = new HashMap<>();
+            mapData.put("name",lyric.getCountryName().toString());
+            mapData.put("flag",flag);
+            data.add(mapData);
+        }
         return data;
     }
 }
