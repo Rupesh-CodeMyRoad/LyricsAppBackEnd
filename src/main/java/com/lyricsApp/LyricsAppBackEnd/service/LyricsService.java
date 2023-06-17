@@ -19,7 +19,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @Service
 @AllArgsConstructor
@@ -138,5 +141,12 @@ public class LyricsService {
 
     public void deleteLyrics(Long id) {
         lyricsRepository.deleteById(id);
+    }
+
+    public Map<String,Object> getDashboardInfo() {
+        int count = lyricsRepository.countLyrics();
+        Map<String,Object> data = new HashMap<>();
+        data.put("count",count);
+        return data;
     }
 }

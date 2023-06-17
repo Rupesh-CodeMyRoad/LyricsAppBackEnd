@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/lyrics")
@@ -67,5 +68,10 @@ public class LyricsController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/dashboard")
+    public Map<String,Object> getDashBoardInfo() {
+        return lyricsService.getDashboardInfo();
     }
 }
