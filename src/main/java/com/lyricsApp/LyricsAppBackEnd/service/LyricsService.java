@@ -5,7 +5,7 @@ import com.lyricsApp.LyricsAppBackEnd.model.Lyrics;
 import com.lyricsApp.LyricsAppBackEnd.repo.LyricsRepo;
 import com.lyricsApp.LyricsAppBackEnd.utils.CountryName;
 import lombok.AllArgsConstructor;
-import org.springframework.core.env.Environment;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -16,22 +16,30 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
-@AllArgsConstructor
 @Transactional
 public class LyricsService {
     private final LyricsRepo lyricsRepository;
 
-    Environment environment;
+    @Value("${env.host.port}")
+    private String envPort;
 
+    @Value("${env.host.name}")
+    private String envHost;
+
+
+    public LyricsService(LyricsRepo lyricsRepository) {
+        this.lyricsRepository = lyricsRepository;
+    }
 
     public ResponseEntity<Lyrics> saveLyrics(LyricsDTO lyricsDto) {
         // Check if a Lyrics object with the same countryName already exists
@@ -176,23 +184,21 @@ public class LyricsService {
         lyricsRepository.deleteById(id);
     }
 
-    public Map<String,Object> getDashboardInfo() {
+    public Map<String, Object> getDashboardInfo() {
         int count = lyricsRepository.countLyrics();
-        Map<String,Object> data = new HashMap<>();
-        data.put("count",count);
+        Map<String, Object> data = new HashMap<>();
+        data.put("count", count);
         return data;
     }
 
-    public List<Map<String,String>> getAllCountryList(){
-        String port = environment.getProperty("local.server.port");
-        String hostName = InetAddress.getLoopbackAddress().getHostName();
-        List<Map<String,String>> data = new ArrayList<>();
+    public List<Map<String, String>> getAllCountryList() {
+        List<Map<String, String>> data = new ArrayList<>();
         List<Lyrics> lyricsData = lyricsRepository.findAll();
-        for (Lyrics lyric: lyricsData) {
-            String flag = "http://"+hostName+":"+port+"/api/lyrics/flag/"+lyric.getCountryName();
-            Map<String,String> mapData = new HashMap<>();
-            mapData.put("name",lyric.getCountryName().toString());
-            mapData.put("flag",flag);
+        for (Lyrics lyric : lyricsData) {
+            String flag = "http://" + envHost + ":" + envPort + "/api/lyrics/flag/" + lyric.getCountryName();
+            Map<String, String> mapData = new HashMap<>();
+            mapData.put("name", lyric.getCountryName().toString());
+            mapData.put("flag", flag);
             data.add(mapData);
         }
         return data;
