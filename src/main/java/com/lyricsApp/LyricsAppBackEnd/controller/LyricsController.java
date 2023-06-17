@@ -19,6 +19,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/lyrics")
 @AllArgsConstructor
+@CrossOrigin(origins = "*")
 public class LyricsController {
     private final LyricsService lyricsService;
 
