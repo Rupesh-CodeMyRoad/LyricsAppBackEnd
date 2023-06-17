@@ -19,6 +19,7 @@ public class Lyrics {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, unique = true)
     private CountryName countryName;
+    @Column(name = "anthem_lyrics", length = 2000)
     private String anthemLyrics;
     private String anthemAudioLink;
     private String flagLink;
